@@ -1,4 +1,4 @@
-# MoneyTrail> 💰 Lumen 
+# MoneyTrail 
 
 Hi Im Ashan
 Basic features include -
@@ -8,6 +8,7 @@ Basic features include -
 - Income/Expense Category
 - Income/Expense Tracking
 - Currency Support
+- Currency conversion
 - Analytic Charts
 
 
