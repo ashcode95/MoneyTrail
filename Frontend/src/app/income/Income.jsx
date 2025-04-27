@@ -20,7 +20,7 @@ import CurrencySidebar from './../common/CurrencySidebar';
 import axios from './../../Axios';
 import { incomeApiEndpoints } from './../../API';
 import { useTracked } from './../../Store';
-import { convertCurrency } from './../../Helpers';
+import { convertCurrency, fetchExchangeRates } from './../../Helpers';
 
 const StyledSwal = Swal.mixin({
   customClass: {
@@ -134,9 +134,8 @@ const Income = (props) => {
 
   const fetchCurrencies = async () => {
     try {
-      const response = await fetch('https://api.exchangeratesapi.io/v1/latest?access_key=fd9ccfc059680b940faf92daad9fd706');
-      const data = await response.json();
-      if (data.success && data.rates) {
+      const data = await fetchExchangeRates();
+      if (data && data.rates) {
         setAvailableCurrencies(Object.keys(data.rates));
       }
     } catch (error) {

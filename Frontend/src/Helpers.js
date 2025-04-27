@@ -48,13 +48,43 @@ export const isLoggedIn = () => {
   return getItem('access_token') && getItem('token_created') && getItem('expires_in');
 };
 
-export const convertCurrency = async (fromCurrency, toCurrency, amount) => {
+let cachedRates = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+export const fetchExchangeRates = async () => {
+  const currentTime = Date.now();
+  
+  // Return cached rates if they exist and are not expired
+  if (cachedRates && (currentTime - lastFetchTime) < CACHE_DURATION) {
+    return cachedRates;
+  }
+
   try {
-    // First get the latest rates
-    const response = await fetch('https://api.exchangeratesapi.io/v1/latest?access_key=7fcc6fd43064a377f46c614c12b7f847');
+    const response = await fetch('https://api.exchangeratesapi.io/v1/latest?access_key=f8c0006a15cedf838648fcb4765ac9f9');
     const data = await response.json();
     
     if (!data.success) {
+      throw new Error('Failed to fetch exchange rates');
+    }
+
+    // Cache the rates and update the last fetch time
+    cachedRates = data;
+    lastFetchTime = currentTime;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching exchange rates:', error);
+    return null;
+  }
+};
+
+export const convertCurrency = async (fromCurrency, toCurrency, amount) => {
+  try {
+    // Get the rates (will use cached version if available)
+    const data = await fetchExchangeRates();
+    
+    if (!data) {
       throw new Error('Failed to fetch exchange rates');
     }
 
