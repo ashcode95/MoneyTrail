@@ -8,8 +8,6 @@ import { Messages } from "primereact/messages";
 import { Button } from "primereact/button";
 import { Link } from "react-router-dom";
 
-import LocaleToggle from './../locale/LocaleToggle';
-
 import axios from './../../Axios';
 import { setItem } from "./../../Helpers";
 import { authApiEndpoints } from "./../../API";
@@ -75,7 +73,7 @@ const Login = (props) => {
             <Messages ref={(el) => messages = el} />
           </div>
           <div className="p-col-12">
-            <div className="p-card-title p-grid p-nogutter p-justify-between">Login <LocaleToggle /></div>
+            <div className="p-card-title p-grid p-nogutter p-justify-between">Login</div>
             <div className="p-card-subtitle">Enter login credentials</div>
           </div>
 

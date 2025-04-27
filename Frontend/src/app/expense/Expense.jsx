@@ -20,6 +20,7 @@ import CurrencySidebar from './../common/CurrencySidebar';
 import axios from './../../Axios';
 import { expenseApiEndpoints } from './../../API';
 import { useTracked } from './../../Store';
+import { convertCurrency } from './../../Helpers';
 
 
 const StyledSwal = Swal.mixin({
@@ -67,10 +68,16 @@ const Expense = (props) => {
   const [submitting, setSubmitting] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [expense, setExpense] = useState({ expenses: {}, fetching: true });
+  const [convertedAmounts, setConvertedAmounts] = useState({});
+  const [converting, setConverting] = useState({});
+  const [showConversionDropdown, setShowConversionDropdown] = useState(null);
+  const [availableCurrencies, setAvailableCurrencies] = useState([]);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD'); // Default currency
 
   useEffect(() => {
     requestExpenseSummary();
     requestExpenseCategory();
+    fetchCurrencies();
   }, []);
 
   useEffect(() => {
@@ -247,6 +254,64 @@ const Expense = (props) => {
     }
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const response = await fetch('https://api.exchangeratesapi.io/v1/latest?access_key=7fcc6fd43064a377f46c614c12b7f847');
+      const data = await response.json();
+      if (data.success && data.rates) {
+        setAvailableCurrencies(Object.keys(data.rates));
+      }
+    } catch (error) {
+      console.error('Error fetching currencies:', error);
+    }
+  };
+
+  const handleCurrencyConversion = async (rowData) => {
+    if (converting[rowData.id]) return;
+    
+    setConverting(prev => ({ ...prev, [rowData.id]: true }));
+    
+    try {
+      const convertedAmount = await convertCurrency(
+        rowData.currency_code,
+        selectedCurrency,
+        rowData.amount
+      );
+      
+      if (convertedAmount) {
+        setConvertedAmounts(prev => ({
+          ...prev,
+          [`${rowData.id}_${selectedCurrency}`]: convertedAmount
+        }));
+      }
+    } catch (error) {
+      console.error('Conversion error:', error);
+    } finally {
+      setConverting(prev => ({ ...prev, [rowData.id]: false }));
+    }
+  };
+
+  const renderConvertedAmountColumn = (rowData) => {
+    const conversionKey = `${rowData.id}_${selectedCurrency}`;
+    const convertedAmount = convertedAmounts[conversionKey];
+    
+    return (
+      <div className="p-d-flex p-ai-center">
+        {convertedAmount ? (
+          <span>{convertedAmount.toLocaleString()} {selectedCurrency}</span>
+        ) : (
+          <span>-</span>
+        )}
+        {converting[rowData.id] && (
+          <ProgressSpinner 
+            style={{ width: '20px', height: '20px' }} 
+            className="p-ml-2"
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       <Helmet title="Expense" />
@@ -297,7 +362,6 @@ const Expense = (props) => {
       </div>
 
       <div className="p-grid">
-
         <div className="p-col-12 p-md-6">
           <Card className="rounded-border">
             <div>
@@ -388,6 +452,32 @@ const Expense = (props) => {
               </div>
             </div>
             <br />
+            <div className="p-d-flex p-ai-center p-mb-3">
+              <span className="p-mr-2">Convert to:</span>
+              <Dropdown
+                value={selectedCurrency}
+                options={availableCurrencies.map(currency => ({
+                  label: currency,
+                  value: currency
+                }))}
+                onChange={(e) => {
+                  setSelectedCurrency(e.value);
+                  setConvertedAmounts({}); // Clear previous conversions
+                }}
+                placeholder="Select currency"
+                style={{ width: '120px' }}
+              />
+              <Button
+                label="Convert All"
+                icon="pi pi-sync"
+                className="p-button-text p-ml-2"
+                onClick={() => {
+                  expense.expenses.data.forEach(rowData => {
+                    handleCurrencyConversion(rowData);
+                  });
+                }}
+              />
+            </div>
             <DataTable
               value={expense.expenses.data}
               sortField={datatable.sortField}
@@ -400,7 +490,6 @@ const Expense = (props) => {
               lazy={true}
               first={expense.expenses.from - 1}
               onPage={(e) => {
-                // console.log(e);
                 setDatatable({
                   ...datatable,
                   currentPage: (e.page + 1),
@@ -408,7 +497,6 @@ const Expense = (props) => {
                 });
               }}
               onSort={e => {
-                // console.log(e);
                 setDatatable({
                   ...datatable,
                   sortField: e.sortField,
@@ -421,9 +509,14 @@ const Expense = (props) => {
               <Column field="spent_on" header="Spent On" sortable={true} />
               <Column field="category_name" header="Category" sortable={true} />
               <Column field="amount" header="Amount" sortable={true}
-                body={(rowData, column) => {
-                  return rowData.amount.toLocaleString() + ' ' + rowData.currency_name
+                body={(rowData) => {
+                  return rowData.amount.toLocaleString() + ' ' + rowData.currency_code;
                 }}
+              />
+              <Column 
+                header="Converted Amount" 
+                body={renderConvertedAmountColumn}
+                style={{ minWidth: '150px' }}
               />
               <Column field="transaction_date" header="Date" sortable={true}
                 body={(rowData, column) => {
@@ -432,7 +525,6 @@ const Expense = (props) => {
               />
               <Column
                 body={(rowData, column) => {
-                  // console.log(rowData);
                   return (
                     <div>
                       <Link to={`/expense/${rowData.id}/edit`}>
@@ -453,10 +545,8 @@ const Expense = (props) => {
             </DataTable>
           </Card>
         </div>
-
       </div>
     </div>
-
   )
 }
 

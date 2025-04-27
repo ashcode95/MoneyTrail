@@ -20,6 +20,7 @@ import CurrencySidebar from './../common/CurrencySidebar';
 import axios from './../../Axios';
 import { incomeApiEndpoints } from './../../API';
 import { useTracked } from './../../Store';
+import { convertCurrency } from './../../Helpers';
 
 const StyledSwal = Swal.mixin({
   customClass: {
@@ -65,10 +66,15 @@ const Income = (props) => {
   const [submitting, setSubmitting] = useState(false);
   const [incomeCategories, setIncomeCategories] = useState([]);
   const [income, setIncome] = useState({ incomes: {}, fetching: true });
+  const [converting, setConverting] = useState({});
+  const [convertedAmounts, setConvertedAmounts] = useState({});
+  const [availableCurrencies, setAvailableCurrencies] = useState([]);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD'); // Default currency
 
   useEffect(() => {
     requestIncomeSummary();
     requestIncomeCategory();
+    fetchCurrencies();
   }, []);
 
   useEffect(() => {
@@ -124,6 +130,64 @@ const Income = (props) => {
       .catch(error => {
         console.log(error);
       });
+  };
+
+  const fetchCurrencies = async () => {
+    try {
+      const response = await fetch('https://api.exchangeratesapi.io/v1/latest?access_key=fd9ccfc059680b940faf92daad9fd706');
+      const data = await response.json();
+      if (data.success && data.rates) {
+        setAvailableCurrencies(Object.keys(data.rates));
+      }
+    } catch (error) {
+      console.error('Error fetching currencies:', error);
+    }
+  };
+
+  const handleCurrencyConversion = async (rowData) => {
+    if (converting[rowData.id]) return;
+    
+    setConverting(prev => ({ ...prev, [rowData.id]: true }));
+    
+    try {
+      const convertedAmount = await convertCurrency(
+        rowData.currency_code,
+        selectedCurrency,
+        rowData.amount
+      );
+      
+      if (convertedAmount) {
+        setConvertedAmounts(prev => ({
+          ...prev,
+          [`${rowData.id}_${selectedCurrency}`]: convertedAmount
+        }));
+      }
+    } catch (error) {
+      console.error('Conversion error:', error);
+    } finally {
+      setConverting(prev => ({ ...prev, [rowData.id]: false }));
+    }
+  };
+
+  const renderConvertedAmountColumn = (rowData) => {
+    const conversionKey = `${rowData.id}_${selectedCurrency}`;
+    const convertedAmount = convertedAmounts[conversionKey];
+    
+    return (
+      <div className="p-d-flex p-ai-center">
+        {convertedAmount ? (
+          <span>{convertedAmount.toLocaleString()} {selectedCurrency}</span>
+        ) : (
+          <span>-</span>
+        )}
+        {converting[rowData.id] && (
+          <ProgressSpinner 
+            style={{ width: '20px', height: '20px' }} 
+            className="p-ml-2"
+          />
+        )}
+      </div>
+    );
   };
 
   const deleteIncome = (data) => {
@@ -386,6 +450,32 @@ const Income = (props) => {
               </div>
             </div>
             <br />
+            <div className="p-d-flex p-ai-center p-mb-3">
+              <span className="p-mr-2">Convert to:</span>
+              <Dropdown
+                value={selectedCurrency}
+                options={availableCurrencies.map(currency => ({
+                  label: currency,
+                  value: currency
+                }))}
+                onChange={(e) => {
+                  setSelectedCurrency(e.value);
+                  setConvertedAmounts({}); // Clear previous conversions
+                }}
+                placeholder="Select currency"
+                style={{ width: '120px' }}
+              />
+              <Button
+                label="Convert All"
+                icon="pi pi-sync"
+                className="p-button-text p-ml-2"
+                onClick={() => {
+                  income.incomes.data.forEach(rowData => {
+                    handleCurrencyConversion(rowData);
+                  });
+                }}
+              />
+            </div>
             <DataTable
               value={income.incomes.data}
               sortField={datatable.sortField}
@@ -418,14 +508,19 @@ const Income = (props) => {
               <Column field="id" header="Serial" sortable={true} />
               <Column field="source" header="Source" sortable={true} />
               <Column field="amount" header="Amount" sortable={true}
-                body={(rowData, column) => {
-                  return rowData.amount.toLocaleString() + ' ' + rowData.currency_name
+                body={(rowData) => {
+                  return rowData.amount.toLocaleString() + ' ' + rowData.currency_code;
                 }}
               />
               <Column field="income_date" header="Date" sortable={true}
                 body={(rowData, column) => {
                   return dayjs(rowData.income_date).format('YYYY-MM-DD hh:mm a')
                 }}
+              />
+              <Column 
+                header="Converted Amount" 
+                body={renderConvertedAmountColumn}
+                style={{ minWidth: '150px' }}
               />
               <Column
                 body={(rowData, column) => {

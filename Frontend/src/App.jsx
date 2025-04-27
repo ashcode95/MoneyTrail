@@ -24,8 +24,8 @@ const App = () => (
       defaultTitle={app_name}
       titleTemplate={`%s | ${app_name}`}
       meta={[
-        { name: 'title', content: 'Expense Tracker - Track and manage your expenses on the go' },
-        { name: 'description', content: 'Expense Tracker - Track and manage your expenses on the go' },
+        { name: 'title', content: 'Money Trail - Track and manage your expenses on the go' },
+        { name: 'description', content: 'Money Trail - Track and manage your expenses on the go' },
         {
           name: 'keywords',
           content: 'expense,tracker,expense-tracker'

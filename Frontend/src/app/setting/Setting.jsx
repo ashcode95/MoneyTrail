@@ -1,16 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { useTranslation } from 'react-i18next';
 
 import { Messages } from 'primereact/messages';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Password } from 'primereact/password';
 
 import CurrencySidebar from './../common/CurrencySidebar';
 
 import { currencyApiEndpoints } from './../../API';
 import axios from './../../Axios';
-import { setItem } from './../../Helpers';
 import { useTracked } from './../../Store';
 
 let messages; // For alert message
@@ -19,12 +19,6 @@ const Setting = (props) => {
 
   const [state, setState] = useTracked();
   const [visible, setVisible] = useState(false);
-  const [t, i18n] = useTranslation();
-
-  const toggleLanguage = useCallback(() => {
-    i18n.language === 'en' ? i18n.changeLanguage('bn') : i18n.changeLanguage('en');
-    setItem('language', i18n.language);
-  }, [i18n]);
 
   const submitSetting = () => {
     axios.put(currencyApiEndpoints.currency + '/' + state.user.id, JSON.stringify({ currency_id: state.currentCurrency.id }))
@@ -154,20 +148,6 @@ const Setting = (props) => {
                   onClick={(e) => {
                     state.layoutMode === 'static' ? setState(prev => ({ ...prev, layoutMode: 'overlay' })) : setState(prev => ({ ...prev, layoutMode: 'static' }))
                   }} />
-              </h3>
-            </div>
-            <div className="p-grid p-nogutter p-justify-between">
-              <h3 className="color-title p-col-4">
-                Language:
-                </h3>
-              <h3 className="color-highlight p-col-4">
-                {i18n.language === 'en' ? 'English' : 'বাংলা'}
-              </h3>
-              <h3>
-                <Button label="Toggle" icon="pi pi-refresh"
-                  className="p-button-rounded p-button-raised p-button-secondary"
-                  type="button"
-                  onClick={(e) => toggleLanguage()} />
               </h3>
             </div>
           </Card>

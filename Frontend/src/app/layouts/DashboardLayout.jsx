@@ -91,7 +91,7 @@ const DashboardLayout = (props) => {
     }
   }
 
-  let logo = state.layoutColorMode === 'dark' ? require('./../../assets/logo-sidebar.png') : require('./../../assets/logo-sidebar.png');
+  let logo = state.layoutColorMode === 'dark' ? require('./../../logo.png') : require('./../../logo.png');
   let wrapperClass = classNames('layout-wrapper', {
     'layout-overlay': state.layoutMode === 'overlay',
     'layout-static': state.layoutMode === 'static',
@@ -108,8 +108,8 @@ const DashboardLayout = (props) => {
       <div className={sidebarClassName}>
         <ScrollPanel style={{ height: '100%' }}>
           <div className="layout-sidebar-scroll-content">
-            <div className="layout-logo">
-              <img alt="Logo" src={logo} style={{ height: '80px' }} />
+            <div className="layout-logo" style={{ marginBottom: '10px' }}>
+              <img alt="Logo" src={logo} style={{ height: '150px' }} />
             </div>
             <AppInlineProfile />
             <AppMenu model={menu} onMenuItemClick={onMenuItemClick} />

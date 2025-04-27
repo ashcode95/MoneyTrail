@@ -1,18 +1,13 @@
 import React from 'react';
-import * as dayjs from 'dayjs';
-import packageJson from './../../../package.json';
 
-const AppFooter = (props) => {
+const AppFooter = () => {
   return (
-    <div className="layout-footer" style={{ display: 'flex', justifyContent: 'space-between', height: '55px' }}>
-      <div>
-        <span className="footer-text">{process.env.REACT_APP_APP_NAME}</span>
-        <img src={require('./../../logo.png')} alt="" height="25px" />
-        <span className="footer-text">Copyright &copy; {dayjs().format('YYYY')}</span>
+    <div className="layout-footer">
+      <div className="p-d-flex p-ai-center p-jc-between">
+        <span className="footer-text">Expense Tracker</span>
       </div>
-      <span className="footer-text">ver.{packageJson.version}</span>
     </div>
   );
-}
+};
 
-export default React.memo(AppFooter);
+export default AppFooter;

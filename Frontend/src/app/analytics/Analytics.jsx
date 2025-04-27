@@ -53,7 +53,7 @@ const Analytics = (props) => {
   const requestMonthWiseChartData = () => {
     axios.get(chartApiEndpoints.incomeExpenseMonthWise, {})
       .then(response => {
-        // console.log(response.data);
+        console.log(response.data);
         setMonthWiseChartData({ ...monthWiseChartData, barChartData: response.data.data.barChartData, barChartDataOptions: response.data.data.options, barChartDataLoading: false });
       })
       .catch(error => {

@@ -11,9 +11,6 @@ import { Link } from 'react-router-dom';
 import axios from './../../Axios';
 import { authApiEndpoints } from './../../API';
 
-import LocaleToggle from './../locale/LocaleToggle';
-// import i18n from './../../locals/i18n';
-
 const registerValidationSchema = yup.object().shape({
   name: yup.string().required('Name field is required').min(4, 'Name must be at most 4 character'),
   email: yup.string().required('Email field is required').email('Email must be a valid email'),
@@ -76,9 +73,7 @@ const Register = (props) => {
             <Messages ref={(el) => messages = el} />
           </div>
           <div className="p-col-12">
-            <div className="p-card-title p-grid p-nogutter p-justify-between">Register
-              <LocaleToggle />
-            </div>
+            <div className="p-card-title p-grid p-nogutter p-justify-between">Register</div>
             <div className="p-card-subtitle">Enter your info to register</div>
           </div>
 
